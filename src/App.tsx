@@ -49,6 +49,13 @@ interface SavedTabItem {
   closable: boolean;
 }
 
+interface ReactElementWithChildren {
+  props: {
+    children?: React.ReactNode;
+    [key: string]: unknown;
+  };
+}
+
 // 菜单映射表 - 用于快速查找菜单项信息
 const menuPathMap: Record<string, { icon: React.ReactNode; label: string }> = {
   '/dashboard': { icon: <DashboardOutlined />, label: '仪表盘' },
@@ -119,7 +126,7 @@ const createTabItem = (path: string, isDefaultTab: boolean = false): TabItem => 
       key: path,
       label: (
         <span style={{ display: 'flex', alignItems: 'center' }}>
-          {React.cloneElement(icon as React.ReactElement, { style: { marginRight: 8 } })}
+          {React.cloneElement(icon as React.ReactElement<{style?: React.CSSProperties}>, { style: { marginRight: 8 } })}
           {label}
         </span>
       ),
@@ -144,20 +151,24 @@ const createTabItem = (path: string, isDefaultTab: boolean = false): TabItem => 
 const convertTabsForStorage = (tabs: TabItem[]): SavedTabItem[] => {
   return tabs.map(tab => {
     let title = '';
-    const labelElement = tab.label as React.ReactElement;
+    const labelElement = tab.label as unknown as ReactElementWithChildren;
     if (labelElement && labelElement.props && labelElement.props.children) {
       const spanElement = labelElement.props.children;
       if (typeof spanElement === 'string') {
         title = spanElement;
-      } else if (spanElement.props && spanElement.props.children) {
+      } else if (spanElement && typeof spanElement === 'object' && 'props' in spanElement) {
         // 提取文本节点
-        const children = Array.isArray(spanElement.props.children) 
-          ? spanElement.props.children 
-          : [spanElement.props.children];
-          
-        title = children
-          .filter(child => typeof child === 'string')
-          .join('');
+        const childrenProps = (spanElement as ReactElementWithChildren).props.children;
+        
+        if (childrenProps) {
+          if (Array.isArray(childrenProps)) {
+            title = childrenProps
+              .filter((child): child is string => typeof child === 'string')
+              .join('');
+          } else if (typeof childrenProps === 'string') {
+            title = childrenProps;
+          }
+        }
       }
     }
     
@@ -424,9 +435,7 @@ const App: React.FC = () => {
         
         {/* 主内容区 - 路由渲染区域 */}
         <Content className="main-content">
-          <div className="content-card">
-            {element}
-          </div>
+          {element}
         </Content>
       </Layout>
     </Layout>
