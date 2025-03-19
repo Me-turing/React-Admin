@@ -9,9 +9,7 @@ import {
   MoreOutlined,
   ReloadOutlined,
   DownloadOutlined,
-  FilterOutlined,
-  DownOutlined,
-  TeamOutlined
+  DownOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -78,10 +76,23 @@ const mockUsers = [
   },
 ];
 
+// 添加用户类型接口
+interface User {
+  id: number;
+  name: string;
+  username: string;
+  department: string;
+  role: string;
+  email: string;
+  phone: string;
+  status: string;
+  createTime: string;
+}
+
 const UserManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const [filteredData, setFilteredData] = useState(mockUsers);
+  const [filteredData, setFilteredData] = useState<User[]>(mockUsers);
   const [searchCollapsed, setSearchCollapsed] = useState(false);
 
   // 表格列配置
@@ -96,7 +107,7 @@ const UserManagement: React.FC = () => {
       title: '用户信息',
       dataIndex: 'name',
       key: 'name',
-      render: (text: string, record: any) => (
+      render: (text: string, record: User) => (
         <Space>
           <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
           <div>
@@ -119,7 +130,7 @@ const UserManagement: React.FC = () => {
     {
       title: '联系方式',
       key: 'contact',
-      render: (text: string, record: any) => (
+      render: (_: unknown, record: User) => (
         <div>
           <div>{record.email}</div>
           <Text type="secondary" style={{ fontSize: '12px' }}>{record.phone}</Text>
@@ -145,7 +156,7 @@ const UserManagement: React.FC = () => {
       title: '操作',
       key: 'action',
       width: 120,
-      render: (text: string, record: any) => (
+      render: () => (
         <Space size="middle">
           <Tooltip title="编辑">
             <Button type="text" icon={<EditOutlined />} size="small" />

@@ -228,7 +228,7 @@ const RoleManagement: React.FC = () => {
       title: '操作',
       key: 'action',
       width: 150,
-      render: (_: any, record: typeof mockRoles[0]) => (
+      render: (_: unknown, record: typeof mockRoles[0]) => (
         <Space size="middle">
           <Tooltip title="编辑角色">
             <Button type="text" icon={<EditOutlined />} size="small" />

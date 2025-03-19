@@ -601,7 +601,7 @@ const ApiManagement: React.FC = () => {
         placement="right"
         closable={true}
         onClose={() => setDrawerVisible(false)}
-        visible={drawerVisible}
+        open={drawerVisible}
         bodyStyle={{ paddingBottom: 80 }}
         footer={
           <div style={{ textAlign: 'right' }}>

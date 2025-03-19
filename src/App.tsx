@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Layout, Menu, Button, Breadcrumb, Badge, Avatar, Space, Tabs } from 'antd'
+import { Layout, Menu, Button, Breadcrumb, Badge, Space, Tabs, Dropdown } from 'antd'
 import { 
   MenuFoldOutlined, 
   MenuUnfoldOutlined, 
   DashboardOutlined, 
   UserOutlined, 
   SettingOutlined,
-  SearchOutlined,
   BellOutlined,
   ExpandOutlined,
   DownOutlined,
@@ -18,7 +17,9 @@ import {
   SafetyOutlined,
   HomeOutlined,
   FileOutlined,
-  UnorderedListOutlined
+  UnorderedListOutlined,
+  LogoutOutlined,
+  CompressOutlined
 } from '@ant-design/icons'
 import { useRoutes, useNavigate, useLocation } from 'react-router-dom'
 import routes from './routes'
@@ -102,6 +103,23 @@ const routeToBreadcrumbMap: Record<string, BreadcrumbItem[]> = {
     { path: '/system/api', title: 'API管理', icon: <ApiOutlined /> }
   ]
 };
+
+// 在顶部添加适当的接口定义
+interface FullScreenDocument extends Document {
+  mozFullScreenElement?: Element;
+  webkitFullscreenElement?: Element;
+  msFullscreenElement?: Element;
+  
+  mozCancelFullScreen?: () => void;
+  webkitExitFullscreen?: () => void;
+  msExitFullscreen?: () => void;
+}
+
+interface FullScreenHTMLElement extends HTMLElement {
+  mozRequestFullScreen?: () => void;
+  webkitRequestFullscreen?: () => void;
+  msRequestFullscreen?: () => void;
+}
 
 // 创建标签页
 const createTabItem = (path: string, isDefaultTab: boolean = false): TabItem => {
@@ -199,6 +217,7 @@ const App: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const element = useRoutes(routes)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   
   // 获取当前路径
   const getCurrentPath = () => {
@@ -294,6 +313,74 @@ const App: React.FC = () => {
       // 在handleTabEdit中不需要保存到本地存储，因为tabs变化时useEffect会处理
     }
   };
+
+  // 处理退出登录
+  const handleLogout = () => {
+    console.log('用户退出登录');
+    // 实际项目中这里应该调用登出API、清除token等
+    // 然后再跳转到登录页
+    // navigate('/login');
+  };
+
+  // 处理全屏切换
+  const toggleFullscreen = () => {
+    const docEl = document.documentElement as FullScreenHTMLElement;
+    const doc = document as FullScreenDocument;
+    
+    if (!isFullscreen) {
+      // 进入全屏模式
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen();
+      } else if (docEl.mozRequestFullScreen) { // Firefox
+        docEl.mozRequestFullScreen();
+      } else if (docEl.webkitRequestFullscreen) { // Chrome, Safari, Opera
+        docEl.webkitRequestFullscreen();
+      } else if (docEl.msRequestFullscreen) { // IE/Edge
+        docEl.msRequestFullscreen();
+      }
+      setIsFullscreen(true);
+    } else {
+      // 退出全屏模式
+      if (doc.exitFullscreen) {
+        doc.exitFullscreen();
+      } else if (doc.mozCancelFullScreen) { // Firefox
+        doc.mozCancelFullScreen();
+      } else if (doc.webkitExitFullscreen) { // Chrome, Safari, Opera
+        doc.webkitExitFullscreen();
+      } else if (doc.msExitFullscreen) { // IE/Edge
+        doc.msExitFullscreen();
+      }
+      setIsFullscreen(false);
+    }
+  };
+
+  // 检测全屏状态变化
+  useEffect(() => {
+    const doc = document as FullScreenDocument;
+    
+    const handleFullscreenChange = () => {
+      setIsFullscreen(
+        document.fullscreenElement ||
+        doc.mozFullScreenElement ||
+        doc.webkitFullscreenElement ||
+        doc.msFullscreenElement
+          ? true
+          : false
+      );
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
 
   return (
     <Layout className="app-container">
@@ -404,18 +491,39 @@ const App: React.FC = () => {
           {/* 顶部右侧功能区 */}
           <div className="top-right">
             <Space size="middle">
-              <Button type="text" icon={<SearchOutlined />} className="top-icon" />
+              {/* <Button type="text" icon={<SearchOutlined />} className="top-icon" /> */}
               <Badge count={3}>
                 <Button type="text" icon={<BellOutlined />} className="top-icon" />
               </Badge>
-              <Button type="text" icon={<ExpandOutlined />} className="top-icon" />
+              <Button 
+                type="text" 
+                icon={isFullscreen ? <CompressOutlined /> : <ExpandOutlined />} 
+                className="top-icon"
+                onClick={toggleFullscreen}
+                title={isFullscreen ? "退出全屏" : "全屏显示"}
+              />
               
               {/* 用户信息 */}
-              <div className="user-info">
-                <Avatar icon={<UserOutlined />} className="user-avatar" />
-                <span style={{ marginLeft: 8 }}>管理员</span>
-                <DownOutlined style={{ fontSize: 12, marginLeft: 8 }} />
-              </div>
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: 'logout',
+                      icon: <LogoutOutlined />,
+                      label: '退出登录',
+                      onClick: handleLogout
+                    }
+                  ]
+                }}
+                placement="bottomRight"
+                arrow
+              >
+                <div className="user-info" style={{ cursor: 'pointer' }}>
+                  {/* <Avatar icon={<UserOutlined />} className="user-avatar" /> */}
+                  <span style={{ marginLeft: 8 }}>管理员</span>
+                  <DownOutlined style={{ fontSize: 12, marginLeft: 8 }} />
+                </div>
+              </Dropdown>
             </Space>
           </div>
         </Header>
