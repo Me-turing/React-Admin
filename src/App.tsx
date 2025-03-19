@@ -15,7 +15,8 @@ import {
   ApiOutlined,
   DatabaseOutlined,
   AppstoreOutlined,
-  SafetyOutlined
+  SafetyOutlined,
+  HomeOutlined
 } from '@ant-design/icons'
 import { useRoutes, useNavigate, useLocation } from 'react-router-dom'
 import routes from './routes'
@@ -31,6 +32,13 @@ interface TabItem {
   closable?: boolean;
 }
 
+// 面包屑项接口
+interface BreadcrumbItem {
+  path: string;
+  title: string;
+  icon?: React.ReactNode;
+}
+
 // 菜单映射表 - 用于快速查找菜单项信息
 const menuPathMap: Record<string, { icon: React.ReactNode; label: string }> = {
   '/dashboard': { icon: <DashboardOutlined />, label: '仪表盘' },
@@ -39,6 +47,43 @@ const menuPathMap: Record<string, { icon: React.ReactNode; label: string }> = {
   '/system/role': { icon: <TeamOutlined />, label: '角色管理' },
   '/system/department': { icon: <ApartmentOutlined />, label: '部门管理' },
   '/system/api': { icon: <ApiOutlined />, label: 'API管理' },
+};
+
+// 路径映射到面包屑路径
+const routeToBreadcrumbMap: Record<string, BreadcrumbItem[]> = {
+  '/dashboard': [
+    { path: '/', title: '首页', icon: <HomeOutlined /> },
+    { path: '/dashboard', title: '仪表盘', icon: <DashboardOutlined /> }
+  ],
+  '/system/user': [
+    { path: '/', title: '首页', icon: <HomeOutlined /> },
+    { path: '/system', title: '系统管理', icon: <SettingOutlined /> },
+    { path: '/system/resource', title: '资源管理', icon: <DatabaseOutlined /> },
+    { path: '/system/user', title: '用户管理', icon: <UserOutlined /> }
+  ],
+  '/system/department': [
+    { path: '/', title: '首页', icon: <HomeOutlined /> },
+    { path: '/system', title: '系统管理', icon: <SettingOutlined /> },
+    { path: '/system/resource', title: '资源管理', icon: <DatabaseOutlined /> },
+    { path: '/system/department', title: '部门管理', icon: <ApartmentOutlined /> }
+  ],
+  '/system/role': [
+    { path: '/', title: '首页', icon: <HomeOutlined /> },
+    { path: '/system', title: '系统管理', icon: <SettingOutlined /> },
+    { path: '/system/permission', title: '权限管理', icon: <SafetyOutlined /> },
+    { path: '/system/role', title: '角色管理', icon: <TeamOutlined /> }
+  ],
+  '/system/menu': [
+    { path: '/', title: '首页', icon: <HomeOutlined /> },
+    { path: '/system', title: '系统管理', icon: <SettingOutlined /> },
+    { path: '/system/permission', title: '权限管理', icon: <SafetyOutlined /> },
+    { path: '/system/menu', title: '菜单管理', icon: <AppstoreOutlined /> }
+  ],
+  '/system/api': [
+    { path: '/', title: '首页', icon: <HomeOutlined /> },
+    { path: '/system', title: '系统管理', icon: <SettingOutlined /> },
+    { path: '/system/api', title: 'API管理', icon: <ApiOutlined /> }
+  ]
 };
 
 const App: React.FC = () => {
@@ -61,11 +106,17 @@ const App: React.FC = () => {
       closable: false // 仪表盘标签不可关闭
     }
   ])
+  
+  // 面包屑状态
+  const [breadcrumbItems, setBreadcrumbItems] = useState<BreadcrumbItem[]>(routeToBreadcrumbMap['/dashboard'] || [])
 
   // 根据当前路径更新标签页
   useEffect(() => {
     const path = location.pathname === '/' ? '/dashboard' : location.pathname
     setActiveTab(path)
+    
+    // 更新面包屑
+    setBreadcrumbItems(routeToBreadcrumbMap[path] || routeToBreadcrumbMap['/dashboard'])
     
     // 检查标签页是否已存在
     const exist = tabs.some(tab => tab.key === path)
@@ -203,9 +254,14 @@ const App: React.FC = () => {
             
             {/* 面包屑导航 */}
             <Breadcrumb className="breadcrumb">
-              <Breadcrumb.Item>首页</Breadcrumb.Item>
-              <Breadcrumb.Item>仪表盘</Breadcrumb.Item>
-              <Breadcrumb.Item>概览</Breadcrumb.Item>
+              {breadcrumbItems.map((item) => (
+                <Breadcrumb.Item key={item.path}>
+                  <span>
+                    {item.icon && <span className="breadcrumb-icon">{item.icon}</span>}
+                    {item.title}
+                  </span>
+                </Breadcrumb.Item>
+              ))}
             </Breadcrumb>
           </div>
           
