@@ -527,7 +527,7 @@ const App: React.FC = () => {
                 </div>
               </Dropdown>
             </Space>
-          </div>
+      </div>
         </Header>
         
         {/* Tab导航 */}
@@ -541,7 +541,7 @@ const App: React.FC = () => {
             className="custom-tabs"
             items={tabs}
           />
-        </div>
+      </div>
         
         {/* 主内容区 - 路由渲染区域 */}
         <Content className="main-content">
