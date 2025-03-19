@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Layout, Menu, Button, Breadcrumb, Badge, Avatar, Space, Tabs } from 'antd'
 import { 
   MenuFoldOutlined, 
@@ -23,15 +23,95 @@ import './App.css'
 
 const { Header, Sider, Content } = Layout
 
+// 标签页接口
+interface TabItem {
+  key: string;
+  label: React.ReactNode;
+  children?: React.ReactNode;
+  closable?: boolean;
+}
+
+// 菜单映射表 - 用于快速查找菜单项信息
+const menuPathMap: Record<string, { icon: React.ReactNode; label: string }> = {
+  '/dashboard': { icon: <DashboardOutlined />, label: '仪表盘' },
+  '/system/user': { icon: <UserOutlined />, label: '用户管理' },
+  '/system/menu': { icon: <AppstoreOutlined />, label: '菜单管理' },
+  '/system/role': { icon: <TeamOutlined />, label: '角色管理' },
+  '/system/department': { icon: <ApartmentOutlined />, label: '部门管理' },
+  '/system/api': { icon: <ApiOutlined />, label: 'API管理' },
+};
+
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const element = useRoutes(routes)
+  
+  // 标签页状态
+  const [activeTab, setActiveTab] = useState('/dashboard')
+  const [tabs, setTabs] = useState<TabItem[]>([
+    {
+      key: '/dashboard',
+      label: (
+        <span>
+          <DashboardOutlined />
+          仪表盘
+        </span>
+      ),
+      closable: false // 仪表盘标签不可关闭
+    }
+  ])
+
+  // 根据当前路径更新标签页
+  useEffect(() => {
+    const path = location.pathname === '/' ? '/dashboard' : location.pathname
+    setActiveTab(path)
+    
+    // 检查标签页是否已存在
+    const exist = tabs.some(tab => tab.key === path)
+    if (!exist && menuPathMap[path]) {
+      // 添加新标签页
+      const { icon, label } = menuPathMap[path]
+      const newTab: TabItem = {
+        key: path,
+        label: (
+          <span>
+            {icon}
+            {label}
+          </span>
+        ),
+        closable: path !== '/dashboard' // 仪表盘不可关闭
+      }
+      setTabs(prev => [...prev, newTab])
+    }
+  }, [location.pathname, tabs])
 
   // 处理菜单点击
   const handleMenuClick = ({ key }: { key: string }) => {
     navigate(key)
+  }
+
+  // 处理标签页切换
+  const handleTabChange = (activeKey: string) => {
+    setActiveTab(activeKey)
+    navigate(activeKey)
+  }
+
+  // 处理关闭标签页
+  const handleTabEdit = (targetKey: React.MouseEvent | React.KeyboardEvent | string, action: 'add' | 'remove') => {
+    if (action === 'remove') {
+      const targetIndex = tabs.findIndex(tab => tab.key === targetKey)
+      const newTabs = tabs.filter(tab => tab.key !== targetKey)
+      
+      // 如果关闭的是当前激活的标签页，则需要激活其他标签页
+      if (targetKey === activeTab) {
+        const newActiveKey = newTabs[targetIndex === 0 ? 0 : targetIndex - 1].key
+        setActiveTab(newActiveKey)
+        navigate(newActiveKey)
+      }
+      
+      setTabs(newTabs)
+    }
   }
 
   return (
@@ -47,7 +127,7 @@ const App: React.FC = () => {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={[location.pathname === '/' ? '/dashboard' : location.pathname]}
+          selectedKeys={[location.pathname === '/' ? '/dashboard' : location.pathname]}
           defaultOpenKeys={['system', 'system-resource', 'system-permission']}
           onClick={handleMenuClick}
           items={[
@@ -151,32 +231,13 @@ const App: React.FC = () => {
         {/* Tab导航 */}
         <div className="tab-nav-container">
           <Tabs 
-            defaultActiveKey="1" 
+            activeKey={activeTab}
             type="editable-card"
             hideAdd
+            onChange={handleTabChange}
+            onEdit={handleTabEdit}
             className="custom-tabs"
-            items={[
-              {
-                key: '1',
-                label: (
-                  <span>
-                    <DashboardOutlined />
-                    仪表盘
-                  </span>
-                ),
-                closable: false
-              },
-              {
-                key: '2',
-                label: (
-                  <span>
-                    <UserOutlined />
-                    用户管理
-                  </span>
-                ),
-                closable: true
-              }
-            ]}
+            items={tabs}
           />
         </div>
         

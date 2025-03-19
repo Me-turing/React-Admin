@@ -89,6 +89,32 @@
   margin-bottom: 0;
 }
 
+.custom-tabs .ant-tabs-tab {
+  padding: 8px 16px !important;
+  transition: all 0.3s;
+}
+
+.custom-tabs .ant-tabs-tab-active {
+  background-color: #ffffff;
+  border-bottom-color: transparent !important;
+}
+
+.custom-tabs .ant-tabs-tab-btn {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #1890ff;
+}
+
+.custom-tabs .ant-tabs-tab .anticon {
+  margin-right: 4px;
+}
+
+.custom-tabs .ant-tabs-nav-more {
+  color: rgba(0, 0, 0, 0.65);
+}
+
 /* 主内容区 */
 .main-content {
   padding: 16px;
