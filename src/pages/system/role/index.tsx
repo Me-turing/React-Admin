@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Typography, Table, Input, Button, Space, Tag, Row, Col, Dropdown, Menu, Tooltip, Tree, Switch, Badge } from 'antd';
+import { Card, Typography, Table, Input, Button, Space, Tag, Row, Col, Dropdown, Menu, Tooltip, Tree, Switch, Badge, Form, Select } from 'antd';
 import { 
   SearchOutlined, 
   PlusOutlined, 
@@ -10,12 +10,14 @@ import {
   LockOutlined,
   TeamOutlined,
   FolderOutlined,
-  FileOutlined
+  FileOutlined,
+  DownOutlined
 } from '@ant-design/icons';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 const { DirectoryTree } = Tree;
+const { Option } = Select;
 
 // 模拟角色数据
 const mockRoles = [
@@ -154,6 +156,7 @@ const RoleManagement: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<number | null>(null);
   const [checkedKeys, setCheckedKeys] = useState<React.Key[]>([]);
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>(['system', 'system:user', 'system:role', 'content']);
+  const [searchCollapsed, setSearchCollapsed] = useState(false);
 
   // 表格列配置
   const columns = [
@@ -324,60 +327,112 @@ const RoleManagement: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      {/* 标题卡片 */}
+      {/* 搜索卡片 - 可折叠 */}
       <Card 
         bordered={false}
         style={{ marginBottom: '24px' }}
-      >
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        title={
           <Row justify="space-between" align="middle">
             <Col>
-              <Title level={4} style={{ margin: 0 }}>角色管理</Title>
-              <Text type="secondary">管理系统中的角色，分配不同权限，控制用户访问范围</Text>
+              <Space>
+                <SearchOutlined />
+                <span>筛选条件</span>
+              </Space>
             </Col>
             <Col>
-              <Button type="primary" icon={<PlusOutlined />}>
-                新增角色
+              <Button 
+                type="link" 
+                icon={<DownOutlined rotate={searchCollapsed ? 180 : 0} />}
+                onClick={() => setSearchCollapsed(!searchCollapsed)}
+              >
+                {searchCollapsed ? "展开" : "收起"}
               </Button>
             </Col>
           </Row>
-        </Space>
+        }
+        bodyStyle={{ 
+          padding: '24px', 
+          display: searchCollapsed ? 'none' : 'block' 
+        }}
+      >
+        <Row gutter={[24, 16]}>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="角色名称" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
+            >
+              <Search
+                placeholder="搜索角色名称..."
+                allowClear
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onSearch={handleSearch}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="角色编码" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
+            >
+              <Input 
+                placeholder="搜索角色编码..." 
+                allowClear
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  handleSearch(e.target.value);
+                }}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="状态" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
+            >
+              <Select placeholder="选择状态" allowClear style={{ width: '100%' }}>
+                <Option value="active">启用</Option>
+                <Option value="inactive">禁用</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row>
+          <Col span={24} style={{ textAlign: 'right', marginTop: '16px' }}>
+            <Space>
+              <Button icon={<ReloadOutlined />} onClick={refreshData}>重置</Button>
+              <Button type="primary" icon={<SearchOutlined />} onClick={() => handleSearch(searchText)}>搜索</Button>
+            </Space>
+          </Col>
+        </Row>
       </Card>
 
       <Row gutter={24}>
         <Col span={selectedRole ? 16 : 24}>
-          {/* 搜索卡片 */}
+          {/* 列表内容卡片 */}
           <Card 
             bordered={false}
-            style={{ marginBottom: '24px' }}
-            bodyStyle={{ padding: '24px' }}
-          >
-            <Row gutter={[16, 16]} align="middle">
-              <Col flex="1">
-                <Search
-                  placeholder="搜索角色名称、编码..."
-                  allowClear
-                  enterButton={<SearchOutlined />}
-                  size="middle"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  onSearch={handleSearch}
-                  style={{ width: '100%' }}
-                />
-              </Col>
-              <Col>
-                <Space>
-                  <Tooltip title="重置筛选">
-                    <Button icon={<ReloadOutlined />} onClick={refreshData} />
-                  </Tooltip>
-                </Space>
-              </Col>
-            </Row>
-          </Card>
-
-          {/* 表格卡片 */}
-          <Card 
-            bordered={false}
+            title={
+              <Row justify="space-between" align="middle">
+                <Col>
+                  <Space>
+                    <TeamOutlined />
+                    <Title level={4} style={{ margin: 0 }}>角色列表</Title>
+                  </Space>
+                </Col>
+                <Col>
+                  <Button type="primary" icon={<PlusOutlined />}>
+                    新增角色
+                  </Button>
+                </Col>
+              </Row>
+            }
             bodyStyle={{ padding: 0 }}
           >
             <Table

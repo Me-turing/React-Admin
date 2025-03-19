@@ -15,11 +15,12 @@ import {
   KeyOutlined,
   LinkOutlined,
   BarsOutlined,
-  SearchOutlined
+  SearchOutlined,
+  DownOutlined
 } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Search } = Input;
 const { DirectoryTree } = Tree;
 const { Option } = Select;
@@ -227,6 +228,7 @@ const MenuManagement: React.FC = () => {
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([2]);
   const [menuType, setMenuType] = useState<string>('menu');
   const [viewMode, setViewMode] = useState<'tree' | 'table'>('tree');
+  const [searchCollapsed, setSearchCollapsed] = useState(false);
   
   // 获取扁平化的菜单数据
   const flatMenus = flattenMenus(mockMenus);
@@ -433,19 +435,106 @@ const MenuManagement: React.FC = () => {
   
   return (
     <div style={{ padding: '24px' }}>
-      {/* 标题卡片 */}
+      {/* 搜索卡片 - 可折叠 */}
       <Card 
         bordered={false}
         style={{ marginBottom: '24px' }}
-      >
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        title={
           <Row justify="space-between" align="middle">
             <Col>
-              <Title level={4} style={{ margin: 0 }}>菜单管理</Title>
-              <Text type="secondary">管理系统菜单配置，设置菜单显示和路由跳转</Text>
+              <Space>
+                <SearchOutlined />
+                <span>筛选条件</span>
+              </Space>
             </Col>
             <Col>
+              <Button 
+                type="link" 
+                icon={<DownOutlined rotate={searchCollapsed ? 180 : 0} />}
+                onClick={() => setSearchCollapsed(!searchCollapsed)}
+              >
+                {searchCollapsed ? "展开" : "收起"}
+              </Button>
+            </Col>
+          </Row>
+        }
+        bodyStyle={{ 
+          padding: '24px', 
+          display: searchCollapsed ? 'none' : 'block' 
+        }}
+      >
+        <Row gutter={[24, 16]}>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="菜单名称" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
+            >
+              <Search
+                placeholder="搜索菜单名称..."
+                allowClear
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onSearch={handleSearch}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="权限标识" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
+            >
+              <Input 
+                placeholder="搜索权限标识..." 
+                allowClear
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  handleSearch(e.target.value);
+                }}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="菜单类型" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
+            >
+              <Select placeholder="选择菜单类型" allowClear style={{ width: '100%' }}>
+                <Option value="directory">目录</Option>
+                <Option value="menu">菜单</Option>
+                <Option value="button">按钮</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row>
+          <Col span={24} style={{ textAlign: 'right', marginTop: '16px' }}>
+            <Space>
+              <Button icon={<ReloadOutlined />} onClick={refreshData}>重置</Button>
+              <Button type="primary" icon={<SearchOutlined />} onClick={() => handleSearch(searchText)}>搜索</Button>
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 列表内容卡片 */}
+      <Card 
+        bordered={false}
+        title={
+          <Row justify="space-between" align="middle">
+            <Col>
               <Space>
+                <MenuOutlined />
+                <Title level={4} style={{ margin: 0 }}>菜单列表</Title>
+              </Space>
+            </Col>
+            <Col>
+              <Space size="middle">
                 <Button 
                   icon={viewMode === 'tree' ? <BarsOutlined /> : <AppstoreOutlined />} 
                   onClick={() => setViewMode(viewMode === 'tree' ? 'table' : 'tree')}
@@ -458,45 +547,14 @@ const MenuManagement: React.FC = () => {
               </Space>
             </Col>
           </Row>
-        </Space>
-      </Card>
-
-      <Row gutter={24}>
-        <Col span={selectedMenuId || menuForm.getFieldValue('parentId') ? 16 : 24}>
-          {/* 搜索卡片 */}
-          <Card 
-            bordered={false}
-            style={{ marginBottom: '24px' }}
-            bodyStyle={{ padding: '24px' }}
-          >
-            <Row gutter={[16, 16]} align="middle">
-              <Col flex="1">
-                <Search
-                  placeholder="搜索菜单名称、权限标识、路径..."
-                  allowClear
-                  enterButton={<SearchOutlined />}
-                  size="middle"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  onSearch={handleSearch}
-                  style={{ width: '100%' }}
-                />
-              </Col>
-              <Col>
-                <Space>
-                  <Tooltip title="刷新">
-                    <Button icon={<ReloadOutlined />} onClick={refreshData} />
-                  </Tooltip>
-                </Space>
-              </Col>
-            </Row>
-          </Card>
-
-          {/* 菜单数据展示 */}
-          <Card 
-            bordered={false}
-            bodyStyle={viewMode === 'tree' ? { padding: '24px' } : { padding: 0 }}
-          >
+        }
+        bodyStyle={{ 
+          padding: viewMode === 'tree' ? '24px' : 0,
+          paddingTop: viewMode === 'tree' ? '24px' : '12px'
+        }}
+      >
+        <Row gutter={24}>
+          <Col span={selectedMenuId || menuForm.getFieldValue('parentId') ? 16 : 24}>
             {viewMode === 'tree' ? (
               <DirectoryTree
                 treeData={treeData as unknown as DataNode[]}
@@ -527,182 +585,183 @@ const MenuManagement: React.FC = () => {
                 }}
               />
             )}
-          </Card>
-        </Col>
+          </Col>
 
-        {/* 菜单表单 */}
-        {(selectedMenuId || menuForm.getFieldValue('parentId')) && (
-          <Col span={8}>
-            <Card
-              title={
-                <Space>
-                  {selectedMenuId ? <EditOutlined /> : <PlusOutlined />}
-                  <span>{selectedMenuId ? '编辑菜单' : '新增菜单'}</span>
-                </Space>
-              }
-              bordered={false}
-              style={{ marginBottom: '24px' }}
-            >
-              <Form
-                form={menuForm}
-                layout="vertical"
-                initialValues={{
-                  visible: true,
-                  sort: 1,
-                  type: 'menu',
-                }}
+          {/* 菜单表单 */}
+          {(selectedMenuId || menuForm.getFieldValue('parentId')) && (
+            <Col span={8}>
+              <Card
+                title={
+                  <Space>
+                    {selectedMenuId ? <EditOutlined /> : <PlusOutlined />}
+                    <span>{selectedMenuId ? '编辑菜单' : '新增菜单'}</span>
+                  </Space>
+                }
+                bordered={false}
+                style={{ marginBottom: '24px' }}
+                bodyStyle={{ padding: '24px' }}
               >
-                <Form.Item
-                  name="type"
-                  label="菜单类型"
-                  rules={[{ required: true, message: '请选择菜单类型' }]}
+                <Form
+                  form={menuForm}
+                  layout="vertical"
+                  initialValues={{
+                    visible: true,
+                    sort: 1,
+                    type: 'menu',
+                  }}
                 >
-                  <Select onChange={handleMenuTypeChange}>
-                    <Option value="directory">目录</Option>
-                    <Option value="menu">菜单</Option>
-                    <Option value="button">按钮</Option>
-                  </Select>
-                </Form.Item>
-                
-                <Form.Item
-                  name="name"
-                  label="菜单名称"
-                  rules={[{ required: true, message: '请输入菜单名称' }]}
-                >
-                  <Input placeholder="请输入菜单名称" />
-                </Form.Item>
-
-                {menuType !== 'button' && (
                   <Form.Item
-                    name="icon"
-                    label="菜单图标"
+                    name="type"
+                    label="菜单类型"
+                    rules={[{ required: true, message: '请选择菜单类型' }]}
                   >
-                    <Select placeholder="请选择图标">
-                      <Option value="HomeOutlined">
-                        <Space>
-                          <HomeOutlined />
-                          <span>首页</span>
-                        </Space>
-                      </Option>
-                      <Option value="SettingOutlined">
-                        <Space>
-                          <SettingOutlined />
-                          <span>设置</span>
-                        </Space>
-                      </Option>
-                      <Option value="UserOutlined">
-                        <Space>
-                          <UserOutlined />
-                          <span>用户</span>
-                        </Space>
-                      </Option>
-                      <Option value="TeamOutlined">
-                        <Space>
-                          <TeamOutlined />
-                          <span>团队</span>
-                        </Space>
-                      </Option>
-                      <Option value="MenuOutlined">
-                        <Space>
-                          <MenuOutlined />
-                          <span>菜单</span>
-                        </Space>
-                      </Option>
-                      <Option value="KeyOutlined">
-                        <Space>
-                          <KeyOutlined />
-                          <span>权限</span>
-                        </Space>
-                      </Option>
+                    <Select onChange={handleMenuTypeChange}>
+                      <Option value="directory">目录</Option>
+                      <Option value="menu">菜单</Option>
+                      <Option value="button">按钮</Option>
                     </Select>
                   </Form.Item>
-                )}
+                  
+                  <Form.Item
+                    name="name"
+                    label="菜单名称"
+                    rules={[{ required: true, message: '请输入菜单名称' }]}
+                  >
+                    <Input placeholder="请输入菜单名称" />
+                  </Form.Item>
 
-                <Form.Item
-                  name="parentId"
-                  label="上级菜单"
-                >
-                  <Select placeholder="请选择上级菜单" allowClear>
-                    <Option value={undefined}>顶级菜单</Option>
-                    {flatMenus
-                      .filter(menu => menu.type !== 'button')
-                      .map(menu => (
-                        <Option key={menu.id} value={menu.id} disabled={menu.id === selectedMenuId}>
-                          {menu.name}
+                  {menuType !== 'button' && (
+                    <Form.Item
+                      name="icon"
+                      label="菜单图标"
+                    >
+                      <Select placeholder="请选择图标">
+                        <Option value="HomeOutlined">
+                          <Space>
+                            <HomeOutlined />
+                            <span>首页</span>
+                          </Space>
                         </Option>
-                      ))
-                    }
-                  </Select>
-                </Form.Item>
+                        <Option value="SettingOutlined">
+                          <Space>
+                            <SettingOutlined />
+                            <span>设置</span>
+                          </Space>
+                        </Option>
+                        <Option value="UserOutlined">
+                          <Space>
+                            <UserOutlined />
+                            <span>用户</span>
+                          </Space>
+                        </Option>
+                        <Option value="TeamOutlined">
+                          <Space>
+                            <TeamOutlined />
+                            <span>团队</span>
+                          </Space>
+                        </Option>
+                        <Option value="MenuOutlined">
+                          <Space>
+                            <MenuOutlined />
+                            <span>菜单</span>
+                          </Space>
+                        </Option>
+                        <Option value="KeyOutlined">
+                          <Space>
+                            <KeyOutlined />
+                            <span>权限</span>
+                          </Space>
+                        </Option>
+                      </Select>
+                    </Form.Item>
+                  )}
 
-                {(menuType === 'menu' || menuType === 'directory') && (
                   <Form.Item
-                    name="path"
-                    label="路由地址"
-                    rules={[{ required: true, message: '请输入路由地址' }]}
+                    name="parentId"
+                    label="上级菜单"
                   >
-                    <Input placeholder="请输入路由地址" prefix={<LinkOutlined />} />
+                    <Select placeholder="请选择上级菜单" allowClear>
+                      <Option value={undefined}>顶级菜单</Option>
+                      {flatMenus
+                        .filter(menu => menu.type !== 'button')
+                        .map(menu => (
+                          <Option key={menu.id} value={menu.id} disabled={menu.id === selectedMenuId}>
+                            {menu.name}
+                          </Option>
+                        ))
+                      }
+                    </Select>
                   </Form.Item>
-                )}
 
-                {menuType === 'menu' && (
+                  {(menuType === 'menu' || menuType === 'directory') && (
+                    <Form.Item
+                      name="path"
+                      label="路由地址"
+                      rules={[{ required: true, message: '请输入路由地址' }]}
+                    >
+                      <Input placeholder="请输入路由地址" prefix={<LinkOutlined />} />
+                    </Form.Item>
+                  )}
+
+                  {menuType === 'menu' && (
+                    <Form.Item
+                      name="component"
+                      label="组件路径"
+                      rules={[{ required: true, message: '请输入组件路径' }]}
+                    >
+                      <Input placeholder="请输入组件路径" prefix={<FileOutlined />} />
+                    </Form.Item>
+                  )}
+
                   <Form.Item
-                    name="component"
-                    label="组件路径"
-                    rules={[{ required: true, message: '请输入组件路径' }]}
+                    name="permission"
+                    label="权限标识"
+                    tooltip="权限标识应该唯一，如：system:user:list"
                   >
-                    <Input placeholder="请输入组件路径" prefix={<FileOutlined />} />
+                    <Input placeholder="请输入权限标识" />
                   </Form.Item>
-                )}
 
-                <Form.Item
-                  name="permission"
-                  label="权限标识"
-                  tooltip="权限标识应该唯一，如：system:user:list"
-                >
-                  <Input placeholder="请输入权限标识" />
-                </Form.Item>
+                  <Form.Item
+                    name="sort"
+                    label="显示排序"
+                    rules={[{ required: true, message: '请输入显示排序' }]}
+                  >
+                    <Input type="number" placeholder="请输入显示排序" />
+                  </Form.Item>
 
-                <Form.Item
-                  name="sort"
-                  label="显示排序"
-                  rules={[{ required: true, message: '请输入显示排序' }]}
-                >
-                  <Input type="number" placeholder="请输入显示排序" />
-                </Form.Item>
+                  <Form.Item
+                    name="visible"
+                    label="显示状态"
+                    valuePropName="checked"
+                  >
+                    <Switch checkedChildren="显示" unCheckedChildren="隐藏" />
+                  </Form.Item>
 
-                <Form.Item
-                  name="visible"
-                  label="显示状态"
-                  valuePropName="checked"
-                >
-                  <Switch checkedChildren="显示" unCheckedChildren="隐藏" />
-                </Form.Item>
+                  <Divider />
 
-                <Divider />
-
-                <Form.Item>
-                  <Space>
-                    <Button 
-                      type="primary"
-                    >
-                      保存
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        setSelectedMenuId(null);
-                        menuForm.resetFields();
-                      }}
-                    >
-                      取消
-                    </Button>
-                  </Space>
-                </Form.Item>
-              </Form>
-            </Card>
-          </Col>
-        )}
-      </Row>
+                  <Form.Item>
+                    <Space>
+                      <Button 
+                        type="primary"
+                      >
+                        保存
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          setSelectedMenuId(null);
+                          menuForm.resetFields();
+                        }}
+                      >
+                        取消
+                      </Button>
+                    </Space>
+                  </Form.Item>
+                </Form>
+              </Card>
+            </Col>
+          )}
+        </Row>
+      </Card>
     </div>
   );
 };

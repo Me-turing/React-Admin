@@ -14,7 +14,8 @@ import {
   UnlockOutlined,
   SafetyOutlined,
   ExportOutlined,
-  ImportOutlined
+  ImportOutlined,
+  DownOutlined
 } from '@ant-design/icons';
 
 const { Title, Text, Paragraph } = Typography;
@@ -210,6 +211,7 @@ const ApiManagement: React.FC = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
   const [form] = Form.useForm<ApiFormData>();
+  const [searchCollapsed, setSearchCollapsed] = useState(true);
   
   // 表格列配置
   const columns = [
@@ -458,67 +460,117 @@ const ApiManagement: React.FC = () => {
       <Card 
         bordered={false}
         style={{ marginBottom: '24px' }}
-        bodyStyle={{ padding: '24px' }}
+        title={
+          <Row justify="space-between" align="middle">
+            <Col>
+              <Space>
+                <SearchOutlined />
+                <span>筛选条件</span>
+              </Space>
+            </Col>
+            <Col>
+              <Button 
+                type="link" 
+                icon={<DownOutlined rotate={searchCollapsed ? 180 : 0} />}
+                onClick={() => setSearchCollapsed(!searchCollapsed)}
+              >
+                {searchCollapsed ? "展开" : "收起"}
+              </Button>
+            </Col>
+          </Row>
+        }
+        bodyStyle={{ 
+          padding: '24px', 
+          display: searchCollapsed ? 'none' : 'block' 
+        }}
       >
-        <Row gutter={[16, 16]}>
+        <Row gutter={[24, 16]}>
           <Col xs={24} sm={12} md={8} lg={6}>
-            <Search
-              placeholder="搜索API名称、路径、描述..."
-              allowClear
-              enterButton={<SearchOutlined />}
-              size="middle"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onSearch={handleSearch}
-              style={{ width: '100%' }}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={5} lg={4}>
-            <Select
-              placeholder="API分类"
-              allowClear
-              style={{ width: '100%' }}
-              onChange={handleCategoryFilter}
-              value={filterCategory}
+            <Form.Item 
+              label="API名称" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
             >
-              {apiCategories.map(category => (
-                <Option key={category.value} value={category.value}>{category.label}</Option>
-              ))}
-            </Select>
+              <Search
+                placeholder="搜索API名称、路径、描述..."
+                allowClear
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onSearch={handleSearch}
+              />
+            </Form.Item>
           </Col>
-          <Col xs={24} sm={12} md={5} lg={4}>
-            <Select
-              placeholder="请求方法"
-              allowClear
-              style={{ width: '100%' }}
-              onChange={handleMethodFilter}
-              value={filterMethod}
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="API分类" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
             >
-              <Option value="GET">GET</Option>
-              <Option value="POST">POST</Option>
-              <Option value="PUT">PUT</Option>
-              <Option value="DELETE">DELETE</Option>
-              <Option value="PATCH">PATCH</Option>
-            </Select>
+              <Select
+                placeholder="选择API分类"
+                allowClear
+                style={{ width: '100%' }}
+                onChange={handleCategoryFilter}
+                value={filterCategory}
+              >
+                {apiCategories.map(category => (
+                  <Option key={category.value} value={category.value}>{category.label}</Option>
+                ))}
+              </Select>
+            </Form.Item>
           </Col>
-          <Col xs={24} sm={12} md={5} lg={4}>
-            <Select
-              placeholder="API状态"
-              allowClear
-              style={{ width: '100%' }}
-              onChange={handleStatusFilter}
-              value={filterStatus}
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="请求方法" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
             >
-              <Option value="published">已发布</Option>
-              <Option value="testing">测试中</Option>
-              <Option value="draft">草稿</Option>
-              <Option value="deprecated">已弃用</Option>
-            </Select>
+              <Select
+                placeholder="选择请求方法"
+                allowClear
+                style={{ width: '100%' }}
+                onChange={handleMethodFilter}
+                value={filterMethod}
+              >
+                <Option value="GET">GET</Option>
+                <Option value="POST">POST</Option>
+                <Option value="PUT">PUT</Option>
+                <Option value="DELETE">DELETE</Option>
+                <Option value="PATCH">PATCH</Option>
+              </Select>
+            </Form.Item>
           </Col>
-          <Col xs={24} sm={24} md={1} lg={6} style={{ textAlign: 'right' }}>
-            <Tooltip title="重置筛选">
-              <Button icon={<ReloadOutlined />} onClick={refreshData} />
-            </Tooltip>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="API状态" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
+            >
+              <Select
+                placeholder="选择API状态"
+                allowClear
+                style={{ width: '100%' }}
+                onChange={handleStatusFilter}
+                value={filterStatus}
+              >
+                <Option value="published">已发布</Option>
+                <Option value="testing">测试中</Option>
+                <Option value="draft">草稿</Option>
+                <Option value="deprecated">已弃用</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row>
+          <Col span={24} style={{ textAlign: 'right', marginTop: '16px' }}>
+            <Space>
+              <Button icon={<ReloadOutlined />} onClick={refreshData}>重置</Button>
+              <Button type="primary" icon={<SearchOutlined />} onClick={() => handleSearch(searchText)}>搜索</Button>
+            </Space>
           </Col>
         </Row>
       </Card>

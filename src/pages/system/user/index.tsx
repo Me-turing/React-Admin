@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Typography, Table, Input, Button, Space, Tag, Avatar, Row, Col, Dropdown, Menu, Tooltip, DatePicker } from 'antd';
+import { Card, Typography, Table, Input, Button, Space, Tag, Avatar, Row, Col, Dropdown, Menu, Tooltip, DatePicker, Form, Select } from 'antd';
 import { 
   UserOutlined, 
   SearchOutlined, 
@@ -9,12 +9,15 @@ import {
   MoreOutlined,
   ReloadOutlined,
   DownloadOutlined,
-  FilterOutlined
+  FilterOutlined,
+  DownOutlined,
+  TeamOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 const { RangePicker } = DatePicker;
+const { Option } = Select;
 
 // 模拟用户数据
 const mockUsers = [
@@ -79,6 +82,7 @@ const UserManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [filteredData, setFilteredData] = useState(mockUsers);
+  const [searchCollapsed, setSearchCollapsed] = useState(false);
 
   // 表格列配置
   const columns = [
@@ -192,16 +196,111 @@ const UserManagement: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      {/* 标题卡片 */}
+      {/* 搜索卡片 - 可折叠 */}
       <Card 
         bordered={false}
         style={{ marginBottom: '24px' }}
-      >
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        title={
           <Row justify="space-between" align="middle">
             <Col>
-              <Title level={4} style={{ margin: 0 }}>用户管理</Title>
-              <Text type="secondary">管理系统中的用户账号，控制用户权限，维护用户信息</Text>
+              <Space>
+                <SearchOutlined />
+                <span>筛选条件</span>
+              </Space>
+            </Col>
+            <Col>
+              <Button 
+                type="link" 
+                icon={<DownOutlined rotate={searchCollapsed ? 180 : 0} />}
+                onClick={() => setSearchCollapsed(!searchCollapsed)}
+              >
+                {searchCollapsed ? "展开" : "收起"}
+              </Button>
+            </Col>
+          </Row>
+        }
+        bodyStyle={{ 
+          padding: '24px', 
+          display: searchCollapsed ? 'none' : 'block' 
+        }}
+      >
+        <Row gutter={[24, 16]}>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="用户名称" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
+            >
+              <Search
+                placeholder="搜索用户名、账号..."
+                allowClear
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onSearch={handleSearch}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="部门" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
+            >
+              <Select placeholder="选择部门" allowClear style={{ width: '100%' }}>
+                <Option value="技术部">技术部</Option>
+                <Option value="市场部">市场部</Option>
+                <Option value="财务部">财务部</Option>
+                <Option value="人力资源部">人力资源部</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="状态" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
+            >
+              <Select placeholder="选择状态" allowClear style={{ width: '100%' }}>
+                <Option value="active">在职</Option>
+                <Option value="inactive">离职</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item 
+              label="创建时间" 
+              style={{ marginBottom: 0 }}
+              labelCol={{ span: 8 }}
+              wrapperCol={{ span: 16 }}
+            >
+              <RangePicker style={{ width: '100%' }} placeholder={['开始日期', '结束日期']} />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row>
+          <Col span={24} style={{ textAlign: 'right', marginTop: '16px' }}>
+            <Space>
+              <Button icon={<ReloadOutlined />} onClick={refreshData}>重置</Button>
+              <Button type="primary" icon={<SearchOutlined />} onClick={() => handleSearch(searchText)}>搜索</Button>
+              <Button icon={<DownloadOutlined />}>导出</Button>
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 列表内容卡片 */}
+      <Card 
+        bordered={false}
+        title={
+          <Row justify="space-between" align="middle">
+            <Col>
+              <Space>
+                <UserOutlined />
+                <Title level={4} style={{ margin: 0 }}>用户列表</Title>
+              </Space>
             </Col>
             <Col>
               <Button type="primary" icon={<PlusOutlined />}>
@@ -209,50 +308,7 @@ const UserManagement: React.FC = () => {
               </Button>
             </Col>
           </Row>
-        </Space>
-      </Card>
-
-      {/* 搜索卡片 */}
-      <Card 
-        bordered={false}
-        style={{ marginBottom: '24px' }}
-        bodyStyle={{ padding: '24px' }}
-      >
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Search
-              placeholder="搜索用户名、部门、角色..."
-              allowClear
-              enterButton={<SearchOutlined />}
-              size="middle"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onSearch={handleSearch}
-              style={{ width: '100%' }}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <RangePicker style={{ width: '100%' }} placeholder={['开始日期', '结束日期']} />
-          </Col>
-          <Col xs={24} sm={24} md={8} lg={12} style={{ textAlign: 'right' }}>
-            <Space>
-              <Tooltip title="重置筛选">
-                <Button icon={<ReloadOutlined />} onClick={refreshData} />
-              </Tooltip>
-              <Tooltip title="导出数据">
-                <Button icon={<DownloadOutlined />} />
-              </Tooltip>
-              <Tooltip title="更多筛选">
-                <Button icon={<FilterOutlined />} />
-              </Tooltip>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* 表格卡片 */}
-      <Card 
-        bordered={false}
+        }
         bodyStyle={{ padding: 0 }}
       >
         <Table
@@ -263,7 +319,7 @@ const UserManagement: React.FC = () => {
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条数据`,
+            showTotal: (total) => `共 ${total} 条记录`,
           }}
           loading={loading}
         />
