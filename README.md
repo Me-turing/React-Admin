@@ -1,54 +1,86 @@
-# React + TypeScript + Vite
+# 大额资金管理系统
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 项目简介
 
-Currently, two official plugins are available:
+基于 React + TypeScript + Ant Design 开发的企业级资金管理系统，提供资金流向监控、风险评估、审批流程等功能。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 技术栈
 
-## Expanding the ESLint configuration
+- React 18
+- TypeScript 5.x
+- Ant Design 5.x
+- Redux Toolkit
+- Axios
+- Vite
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 开发环境要求
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- Node.js >= 16.0.0
+- npm >= 8.0.0
+- Git
+
+## 快速开始
+
+1. 克隆项目
+```bash
+git clone [项目地址]
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+2. 安装依赖
+```bash
+cd risk-management-system
+npm install
 ```
+
+3. 启动开发服务器
+```bash
+npm run dev
+```
+
+4. 构建生产版本
+```bash
+npm run build
+```
+
+## 项目文档
+
+详细文档请查看 [docs](./docs) 目录：
+
+- [架构设计](./docs/architecture.md)
+- [开发环境搭建](./docs/development.md)
+- [技术栈说明](./docs/tech-stack.md)
+- [代码规范](./docs/code-style.md)
+
+## 目录结构
+
+```
+src/
+├── assets/          # 静态资源
+├── components/      # 共享组件
+├── hooks/          # 自定义Hooks
+├── pages/          # 页面组件
+├── services/       # API服务
+├── store/          # 状态管理
+├── types/          # 类型定义
+├── utils/          # 工具函数
+└── constants/      # 常量定义
+```
+
+## 开发规范
+
+- 遵循 TypeScript 严格模式
+- 使用 ESLint + Prettier 进行代码规范
+- 遵循 Git Flow 工作流
+- 使用 Conventional Commits 规范
+
+## 贡献指南
+
+1. Fork 本仓库
+2. 创建特性分支
+3. 提交变更
+4. 推送到分支
+5. 创建 Pull Request
+
+## 许可证
+
+[MIT](LICENSE)
