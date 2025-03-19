@@ -16,11 +16,14 @@ import {
   DatabaseOutlined,
   AppstoreOutlined,
   SafetyOutlined,
-  HomeOutlined
+  HomeOutlined,
+  FileOutlined,
+  UnorderedListOutlined
 } from '@ant-design/icons'
 import { useRoutes, useNavigate, useLocation } from 'react-router-dom'
 import routes from './routes'
 import './App.css'
+import { saveTabsToStorage, getTabsFromStorage } from './utils/storage'
 
 const { Header, Sider, Content } = Layout
 
@@ -37,6 +40,13 @@ interface BreadcrumbItem {
   path: string;
   title: string;
   icon?: React.ReactNode;
+}
+
+// 简化版标签页数据结构，用于本地存储
+interface SavedTabItem {
+  key: string;
+  title: string;
+  closable: boolean;
 }
 
 // 菜单映射表 - 用于快速查找菜单项信息
@@ -86,89 +96,204 @@ const routeToBreadcrumbMap: Record<string, BreadcrumbItem[]> = {
   ]
 };
 
+// 创建标签页
+const createTabItem = (path: string, isDefaultTab: boolean = false): TabItem => {
+  // 默认标签（仪表盘）
+  if (isDefaultTab || path === '/dashboard') {
+    return {
+      key: '/dashboard',
+      label: (
+        <span style={{ display: 'flex', alignItems: 'center' }}>
+          <FileOutlined style={{ marginRight: 8 }} />
+          仪表盘
+        </span>
+      ),
+      closable: false // 仪表盘标签不可关闭
+    };
+  }
+  
+  // 其他标签
+  if (menuPathMap[path]) {
+    const { icon, label } = menuPathMap[path];
+    return {
+      key: path,
+      label: (
+        <span style={{ display: 'flex', alignItems: 'center' }}>
+          {React.cloneElement(icon as React.ReactElement, { style: { marginRight: 8 } })}
+          {label}
+        </span>
+      ),
+      closable: true
+    };
+  }
+  
+  // 未找到对应菜单项，创建通用标签
+  return {
+    key: path,
+    label: (
+      <span style={{ display: 'flex', alignItems: 'center' }}>
+        <UnorderedListOutlined style={{ marginRight: 8 }} />
+        {path.split('/').pop() || '未知页面'}
+      </span>
+    ),
+    closable: true
+  };
+};
+
+// 将TabItem转换为可存储的格式
+const convertTabsForStorage = (tabs: TabItem[]): SavedTabItem[] => {
+  return tabs.map(tab => {
+    let title = '';
+    const labelElement = tab.label as React.ReactElement;
+    if (labelElement && labelElement.props && labelElement.props.children) {
+      const spanElement = labelElement.props.children;
+      if (typeof spanElement === 'string') {
+        title = spanElement;
+      } else if (spanElement.props && spanElement.props.children) {
+        // 提取文本节点
+        const children = Array.isArray(spanElement.props.children) 
+          ? spanElement.props.children 
+          : [spanElement.props.children];
+          
+        title = children
+          .filter(child => typeof child === 'string')
+          .join('');
+      }
+    }
+    
+    return {
+      key: tab.key,
+      title: title || tab.key.split('/').pop() || '',
+      closable: !!tab.closable
+    };
+  });
+};
+
+// 从存储格式恢复TabItem
+const restoreTabsFromStorage = (savedTabs: SavedTabItem[]): TabItem[] => {
+  if (!savedTabs || !Array.isArray(savedTabs) || savedTabs.length === 0) {
+    return [createTabItem('/dashboard', true)];
+  }
+  
+  return savedTabs.map(tab => {
+    if (tab.key === '/dashboard') {
+      return createTabItem('/dashboard', true);
+    }
+    return createTabItem(tab.key);
+  });
+};
+
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const element = useRoutes(routes)
   
+  // 获取当前路径
+  const getCurrentPath = () => {
+    return location.pathname === '/' ? '/dashboard' : location.pathname;
+  };
+  
   // 标签页状态
-  const [activeTab, setActiveTab] = useState('/dashboard')
-  const [tabs, setTabs] = useState<TabItem[]>([
-    {
-      key: '/dashboard',
-      label: (
-        <span>
-          <DashboardOutlined />
-          仪表盘
-        </span>
-      ),
-      closable: false // 仪表盘标签不可关闭
+  const [activeTab, setActiveTab] = useState(getCurrentPath)
+  const [tabs, setTabs] = useState<TabItem[]>(() => {
+    // 从本地存储中恢复标签页
+    const savedTabs = getTabsFromStorage<SavedTabItem>();
+    if (savedTabs && savedTabs.length > 0) {
+      // 恢复已保存的标签页
+      const restoredTabs = restoreTabsFromStorage(savedTabs);
+      
+      // 确保当前路径的标签页存在
+      const currentPath = getCurrentPath();
+      if (!savedTabs.some(tab => tab.key === currentPath) && currentPath !== '/dashboard') {
+        // 当前路径不在已保存的标签页中，添加它
+        return [...restoredTabs, createTabItem(currentPath)];
+      }
+      
+      return restoredTabs;
     }
-  ])
+    
+    // 没有已保存的标签页，创建初始标签页
+    const currentPath = getCurrentPath();
+    if (currentPath === '/dashboard') {
+      return [createTabItem('/dashboard', true)];
+    } else {
+      return [
+        createTabItem('/dashboard', true),
+        createTabItem(currentPath)
+      ];
+    }
+  });
   
   // 面包屑状态
-  const [breadcrumbItems, setBreadcrumbItems] = useState<BreadcrumbItem[]>(routeToBreadcrumbMap['/dashboard'] || [])
+  const [breadcrumbItems, setBreadcrumbItems] = useState<BreadcrumbItem[]>(
+    () => routeToBreadcrumbMap[getCurrentPath()] || routeToBreadcrumbMap['/dashboard']
+  );
 
-  // 根据当前路径更新标签页
+  // 根据当前路径更新标签页和面包屑
   useEffect(() => {
-    const path = location.pathname === '/' ? '/dashboard' : location.pathname
-    setActiveTab(path)
+    const currentPath = getCurrentPath();
     
     // 更新面包屑
-    setBreadcrumbItems(routeToBreadcrumbMap[path] || routeToBreadcrumbMap['/dashboard'])
+    setBreadcrumbItems(routeToBreadcrumbMap[currentPath] || routeToBreadcrumbMap['/dashboard']);
     
-    // 检查标签页是否已存在
-    const exist = tabs.some(tab => tab.key === path)
-    if (!exist && menuPathMap[path]) {
-      // 添加新标签页
-      const { icon, label } = menuPathMap[path]
-      const newTab: TabItem = {
-        key: path,
-        label: (
-          <span>
-            {icon}
-            {label}
-          </span>
-        ),
-        closable: path !== '/dashboard' // 仪表盘不可关闭
-      }
-      setTabs(prev => [...prev, newTab])
+    // 更新当前活动标签
+    setActiveTab(currentPath);
+    
+    // 检查标签页是否已存在，如果不存在则添加
+    if (!tabs.some(tab => tab.key === currentPath)) {
+      const newTabs = [...tabs, createTabItem(currentPath)];
+      setTabs(newTabs);
+      
+      // 保存到本地存储
+      saveTabsToStorage(convertTabsForStorage(newTabs));
     }
-  }, [location.pathname, tabs])
+  }, [location.pathname]); // 只依赖location.pathname，不依赖tabs
+
+  // 每当tabs变化时，保存到localStorage
+  useEffect(() => {
+    saveTabsToStorage(convertTabsForStorage(tabs));
+  }, [tabs]);
 
   // 处理菜单点击
   const handleMenuClick = ({ key }: { key: string }) => {
-    navigate(key)
-  }
+    navigate(key);
+  };
 
   // 处理标签页切换
   const handleTabChange = (activeKey: string) => {
-    setActiveTab(activeKey)
-    navigate(activeKey)
-  }
+    setActiveTab(activeKey);
+    navigate(activeKey);
+  };
 
   // 处理关闭标签页
   const handleTabEdit = (targetKey: React.MouseEvent | React.KeyboardEvent | string, action: 'add' | 'remove') => {
     if (action === 'remove') {
-      const targetIndex = tabs.findIndex(tab => tab.key === targetKey)
-      const newTabs = tabs.filter(tab => tab.key !== targetKey)
+      const targetIndex = tabs.findIndex(tab => tab.key === targetKey);
+      const newTabs = tabs.filter(tab => tab.key !== targetKey);
       
       // 如果关闭的是当前激活的标签页，则需要激活其他标签页
       if (targetKey === activeTab) {
-        const newActiveKey = newTabs[targetIndex === 0 ? 0 : targetIndex - 1].key
-        setActiveTab(newActiveKey)
-        navigate(newActiveKey)
+        const newActiveKey = newTabs[targetIndex === 0 ? 0 : targetIndex - 1].key;
+        setActiveTab(newActiveKey);
+        navigate(newActiveKey);
       }
       
-      setTabs(newTabs)
+      setTabs(newTabs);
+      // 在handleTabEdit中不需要保存到本地存储，因为tabs变化时useEffect会处理
     }
-  }
+  };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout className="app-container">
       {/* 侧边栏 */}
-      <Sider trigger={null} collapsible collapsed={collapsed} width={220}>
+      <Sider 
+        trigger={null} 
+        collapsible 
+        collapsed={collapsed} 
+        width={220}
+        className="fixed-sider"
+      >
         {/* Logo区域 */}
         <div className="logo-area">
           <span>{collapsed ? 'LES' : '大额资金管理系统'}</span>
@@ -178,7 +303,7 @@ const App: React.FC = () => {
         <Menu
           theme="dark"
           mode="inline"
-          selectedKeys={[location.pathname === '/' ? '/dashboard' : location.pathname]}
+          selectedKeys={[getCurrentPath()]}
           defaultOpenKeys={['system', 'system-resource', 'system-permission']}
           onClick={handleMenuClick}
           items={[
@@ -237,9 +362,9 @@ const App: React.FC = () => {
         />
       </Sider>
       
-      <Layout>
+      <Layout className="site-layout">
         {/* 顶部导航 */}
-        <Header className="top-nav">
+        <Header className="fixed-header">
           <div className="header-left">
             <Button
               type="text"
@@ -247,7 +372,7 @@ const App: React.FC = () => {
               onClick={() => setCollapsed(!collapsed)}
               style={{
                 fontSize: '16px',
-                width: 64,
+                width: 54,
                 height: 64,
               }}
             />

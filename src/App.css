@@ -3,6 +3,48 @@
   height: 100%;
 }
 
+/* 应用容器 */
+.app-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 固定侧边栏 */
+.fixed-sider {
+  overflow: auto;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+
+/* 主布局区域 */
+.site-layout {
+  min-height: 100vh;
+  margin-left: 220px;
+  transition: margin-left 0.3s;
+}
+
+.fixed-sider.ant-layout-sider-collapsed + .site-layout {
+  margin-left: 80px;
+}
+
+/* 固定头部 */
+.fixed-header {
+  background: white !important;
+  padding: 0 !important;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
+  line-height: 64px;
+}
+
 /* Logo区域 */
 .logo-area {
   height: 64px;
@@ -19,24 +61,19 @@
   transition: all 0.3s;
 }
 
+.demo-logo-vertical {
+  height: 32px;
+  margin: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+}
+
 .logo-area .anticon {
   font-size: 18px;
 }
 
 .logo-area span {
   margin-left: 8px;
-}
-
-/* 顶部导航 */
-.top-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: white !important;
-  padding: 0 !important;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
-  height: 64px;
-  line-height: 64px;
 }
 
 .header-left {
@@ -84,6 +121,9 @@
   background-color: #f5f5f5;
   border-bottom: 1px solid #e0e0e0;
   padding: 0 16px;
+  position: sticky;
+  top: 64px;
+  z-index: 99;
 }
 
 .custom-tabs {
@@ -123,8 +163,8 @@
 /* 主内容区 */
 .main-content {
   padding: 16px;
-  display: flex;
-  justify-content: center;
+  overflow: auto;
+  height: calc(100vh - 64px - 46px);
 }
 
 .content-card {
@@ -133,15 +173,22 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
   padding: 16px;
   width: 100%;
-  max-width: 1400px;
+  height: 100%;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .ant-layout-sider {
+  .site-layout {
+    margin-left: 0;
+  }
+  
+  .fixed-sider.ant-layout-sider-collapsed + .site-layout {
+    margin-left: 0;
+  }
+  
+  .fixed-sider {
     position: fixed;
-    height: 100vh;
-    z-index: 100;
+    z-index: 999;
   }
   
   .logo-area span {
