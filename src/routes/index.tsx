@@ -6,39 +6,49 @@ import MenuManagement from '../pages/system/menu';
 import RoleManagement from '../pages/system/role';
 import DepartmentManagement from '../pages/system/department';
 import ApiManagement from '../pages/system/api';
+import LoginPage from '../pages/login';
 
 // 定义路由配置
 const routes: RouteObject[] = [
   {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
     path: '/',
-    element: <Dashboard />,
-  },
-  {
-    path: '/dashboard',
-    element: <Dashboard />,
-  },
-  {
-    path: '/system',
     children: [
       {
-        path: 'user',
-        element: <UserManagement />,
+        path: '',
+        element: <Dashboard />,
       },
       {
-        path: 'menu',
-        element: <MenuManagement />,
+        path: 'dashboard',
+        element: <Dashboard />,
       },
       {
-        path: 'role',
-        element: <RoleManagement />,
-      },
-      {
-        path: 'department',
-        element: <DepartmentManagement />,
-      },
-      {
-        path: 'api',
-        element: <ApiManagement />,
+        path: 'system',
+        children: [
+          {
+            path: 'user',
+            element: <UserManagement />,
+          },
+          {
+            path: 'menu',
+            element: <MenuManagement />,
+          },
+          {
+            path: 'role',
+            element: <RoleManagement />,
+          },
+          {
+            path: 'department',
+            element: <DepartmentManagement />,
+          },
+          {
+            path: 'api',
+            element: <ApiManagement />,
+          },
+        ],
       },
     ],
   },

@@ -248,10 +248,7 @@ const App: React.FC = () => {
     if (currentPath === '/dashboard') {
       return [createTabItem('/dashboard', true)];
     } else {
-      return [
-        createTabItem('/dashboard', true),
-        createTabItem(currentPath)
-      ];
+      return [createTabItem('/dashboard', true), createTabItem(currentPath)];
     }
   });
   
@@ -381,6 +378,11 @@ const App: React.FC = () => {
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
   }, []);
+
+  // 如果是登录页面，直接返回登录组件
+  if (location.pathname === '/login') {
+    return element;
+  }
 
   return (
     <Layout className="app-container">
