@@ -9,19 +9,35 @@ import {
   SearchOutlined,
   BellOutlined,
   ExpandOutlined,
-  DownOutlined
+  DownOutlined,
+  TeamOutlined,
+  ApartmentOutlined,
+  ApiOutlined,
+  DatabaseOutlined,
+  AppstoreOutlined,
+  SafetyOutlined
 } from '@ant-design/icons'
+import { useRoutes, useNavigate, useLocation } from 'react-router-dom'
+import routes from './routes'
 import './App.css'
 
 const { Header, Sider, Content } = Layout
 
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const element = useRoutes(routes)
+
+  // 处理菜单点击
+  const handleMenuClick = ({ key }: { key: string }) => {
+    navigate(key)
+  }
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
       {/* 侧边栏 */}
-      <Sider trigger={null} collapsible collapsed={collapsed}  width={220}>
+      <Sider trigger={null} collapsible collapsed={collapsed} width={220}>
         {/* Logo区域 */}
         <div className="logo-area">
           <span>{collapsed ? 'LES' : '大额资金管理系统'}</span>
@@ -31,33 +47,58 @@ const App: React.FC = () => {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={['1']}
-          defaultOpenKeys={['sub1']}
+          defaultSelectedKeys={[location.pathname === '/' ? '/dashboard' : location.pathname]}
+          defaultOpenKeys={['system', 'system-resource', 'system-permission']}
+          onClick={handleMenuClick}
           items={[
             {
-              key: '1',
+              key: '/dashboard',
               icon: <DashboardOutlined />,
               label: '仪表盘',
             },
             {
-              key: 'sub1',
+              key: 'system',
               icon: <SettingOutlined />,
               label: '系统管理',
               children: [
                 {
-                  key: '2',
-                  icon: <UserOutlined />,
-                  label: '用户管理',
+                  key: 'system-resource',
+                  icon: <DatabaseOutlined />,
+                  label: '资源管理',
+                  children: [
+                    {
+                      key: '/system/user',
+                      icon: <UserOutlined />,
+                      label: '用户管理',
+                    },
+                    {
+                      key: '/system/department',
+                      icon: <ApartmentOutlined />,
+                      label: '部门管理',
+                    }
+                  ]
                 },
                 {
-                  key: '3',
-                  icon: <SettingOutlined />,
-                  label: '菜单管理',
+                  key: 'system-permission',
+                  icon: <SafetyOutlined />,
+                  label: '权限管理',
+                  children: [
+                    {
+                      key: '/system/role',
+                      icon: <TeamOutlined />,
+                      label: '角色管理',
+                    },
+                    {
+                      key: '/system/menu',
+                      icon: <AppstoreOutlined />,
+                      label: '菜单管理',
+                    }
+                  ]
                 },
                 {
-                  key: '4',
-                  icon: <SettingOutlined />,
-                  label: '角色权限',
+                  key: '/system/api',
+                  icon: <ApiOutlined />,
+                  label: 'API管理',
                 }
               ]
             }
@@ -139,13 +180,10 @@ const App: React.FC = () => {
           />
         </div>
         
-        {/* 主内容区 */}
+        {/* 主内容区 - 路由渲染区域 */}
         <Content className="main-content">
           <div className="content-card">
-            <h1>大额资金管理系统</h1>
-            <p>欢迎使用大额资金管理系统。这里是您的资金管理概览。</p>
-            
-            {/* 这里可以添加仪表盘内容，如统计卡片、图表等，根据需要实现 */}
+            {element}
           </div>
         </Content>
       </Layout>
