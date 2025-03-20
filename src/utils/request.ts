@@ -1,10 +1,10 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { message } from 'antd';
 
 // 创建axios实例
 const request: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_APP_API_BASE_URL,
-  timeout: 10000,
+  baseURL: '/api', // API请求的默认前缀
+  timeout: 10000, // 请求超时时间
   headers: {
     'Content-Type': 'application/json',
   },
@@ -12,7 +12,7 @@ const request: AxiosInstance = axios.create({
 
 // 请求拦截器
 request.interceptors.request.use(
-  (config) => {
+  (config: InternalAxiosRequestConfig) => {
     // 从localStorage获取token
     const token = localStorage.getItem('token');
     if (token) {
@@ -29,24 +29,25 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response: AxiosResponse) => {
     const { data } = response;
-    // 这里可以根据后端的响应结构进行调整
-    if (data.code === 200) {
+    // 如果响应成功
+    if (data.code === 200 && data.success) {
       return data.data;
-    } else {
-      message.error(data.message || '请求失败');
-      return Promise.reject(new Error(data.message || '请求失败'));
     }
+    // 处理业务错误
+    message.error(data.message || '请求失败');
+    return Promise.reject(new Error(data.message || '请求失败'));
   },
   (error) => {
+    // 处理HTTP错误
     if (error.response) {
       switch (error.response.status) {
         case 401:
-          // 未登录或token过期
-          message.error('请重新登录');
-          // 可以在这里执行退出登录操作
+          // 未授权,清除token并跳转到登录页
+          localStorage.removeItem('token');
+          window.location.href = '/login';
           break;
         case 403:
-          message.error('没有权限访问');
+          message.error('没有权限访问该资源');
           break;
         case 404:
           message.error('请求的资源不存在');

@@ -113,6 +113,13 @@ export const mockUserPermissions: IUserPermission[] = [
     id: '1',
     userId: '1',
     permissions: [
+      // 基础权限
+      'dashboard:view',
+      'log:view',
+      'log:operation:view',
+      'log:login:view',
+      // 系统管理权限
+      'system:view',
       'system:user:view',
       'system:user:edit',
       'system:user:delete',
@@ -122,6 +129,12 @@ export const mockUserPermissions: IUserPermission[] = [
       'system:menu:view',
       'system:menu:edit',
       'system:menu:delete',
+      'system:department:view',
+      'system:department:edit',
+      'system:department:delete',
+      'system:api:view',
+      'system:api:edit',
+      'system:api:delete',
     ],
     roles: ['admin'],
   },
@@ -129,10 +142,19 @@ export const mockUserPermissions: IUserPermission[] = [
     id: '2',
     userId: '2',
     permissions: [
+      // 基础权限
+      'dashboard:view',
+      'log:view',
+      'log:operation:view',
+      'log:login:view',
+      // 系统管理权限
+      'system:view',
       'system:user:view',
       'system:user:edit',
       'system:role:view',
       'system:menu:view',
+      'system:department:view',
+      'system:api:view',
     ],
     roles: ['manager'],
   },
@@ -140,6 +162,13 @@ export const mockUserPermissions: IUserPermission[] = [
     id: '3',
     userId: '3',
     permissions: [
+      // 基础权限
+      'dashboard:view',
+      'log:view',
+      'log:operation:view',
+      'log:login:view',
+      // 系统管理权限
+      'system:view',
       'system:user:view',
       'system:menu:view',
     ],

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Form, Input, Button, Checkbox, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '@/hooks/useUser';
 import styles from './index.module.less';
 
 interface LoginForm {
@@ -10,52 +11,71 @@ interface LoginForm {
   remember: boolean;
 }
 
-interface LoginResponse {
-  token: string;
-  user: {
-    id: string;
-    username: string;
-    name: string;
-  };
-}
-
 const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, getUserInfo, getUserPermissions, getUserMenus, token } = useUser();
+  const [form] = Form.useForm<LoginForm>();
+
+  // 从localStorage获取保存的用户名和密码
+  const savedUsername = localStorage.getItem('username');
+  const savedPassword = localStorage.getItem('password');
 
   const onFinish = async (values: LoginForm) => {
     try {
       setLoading(true);
-      // TODO: 实现登录逻辑
-      await mockLogin(values);
+      
+      // 1. 调用登录API
+      const loginResponse = await login({
+        username: values.username,
+        password: values.password,
+      });
+
+      // 2. 验证登录响应
+      if (!loginResponse?.token) {
+        throw new Error('登录失败: 未获取到token');
+      }
+
+      // 3. 获取用户信息
+      const userInfo = await getUserInfo();
+      if (!userInfo) {
+        throw new Error('获取用户信息失败');
+      }
+
+      // 4. 获取用户权限
+      const permissions = await getUserPermissions();
+      if (!permissions?.length) {
+        throw new Error('获取用户权限失败');
+      }
+
+      // 5. 获取用户菜单
+      const menus = await getUserMenus();
+      if (!menus?.length) {
+        throw new Error('获取用户菜单失败');
+      }
+
+      // 6. 处理"记住我"功能
+      if (values.remember) {
+        localStorage.setItem('username', values.username);
+        localStorage.setItem('password', values.password);
+      } else {
+        localStorage.removeItem('username');
+        localStorage.removeItem('password');
+      }
+
+      // 7. 验证最终状态
+      if (!token) {
+        throw new Error('登录状态异常');
+      }
+
       message.success('登录成功');
       navigate('/');
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '登录失败，请重试';
-      message.error(errorMessage);
+    } catch (error) {
+      console.error('登录失败:', error);
+      message.error(error instanceof Error ? error.message : '登录失败,请检查用户名和密码');
     } finally {
       setLoading(false);
     }
-  };
-
-  // 模拟登录请求
-  const mockLogin = async (values: LoginForm): Promise<LoginResponse> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (values.username === 'admin' && values.password === 'admin') {
-          resolve({
-            token: 'mock-token',
-            user: {
-              id: '1',
-              username: 'admin',
-              name: '管理员'
-            }
-          });
-        } else {
-          reject(new Error('用户名或密码错误'));
-        }
-      }, 1000);
-    });
   };
 
   return (
@@ -77,10 +97,16 @@ const LoginPage: React.FC = () => {
           </div>
 
           <Form
+            form={form}
             name="login"
             onFinish={onFinish}
             autoComplete="off"
             size="large"
+            initialValues={{
+              username: savedUsername || '',
+              password: savedPassword || '',
+              remember: !!savedUsername,
+            }}
           >
             <Form.Item
               name="username"
@@ -133,11 +159,6 @@ const LoginPage: React.FC = () => {
                 本系统仅限内部授权人员访问，所有操作将被记录并审计。如遇登录问题，请联系系统管理员。
               </p>
             </div>
-
-            {/* <div className={styles.securityInfo}>
-              <SafetyCertificateOutlined />
-              <span>系统采用多重加密技术，确保交易数据安全</span>
-            </div> */}
 
             <div className={styles.loginFooter}>
               Copyright © 2025 XXXX 管理系统 版权所有
